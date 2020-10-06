@@ -31,16 +31,22 @@ scale_fill_discrete = scale_fill_viridis_d
 data("instacart")
 ```
 
-This data set contains `r nrow(instacart)` rows and `r ncol(instacart)` columns. Observations are at the level of items in orders by users. There are user /  order variables `user_id`, order ID, order dat and order hour. There are also item variables -- name, aisle, department, and some numeric codes. POLISH THIS TEXT
+This data set contains `r nrow(instacart)` rows and `r ncol(instacart)` columns. Observations are at the level of items in orders by users, , meaning there is 1 row for each product ordered in each order. There are user /  order variables `user_id`, `order_id`, `order_dow` and `order_hour_of_day`. There are also item variables -- `product_name`, `aisle`, `department`, and numeric codes for `product_id`, `aisle_id` and `department_id`. There are also some variables regarding whether someone re-ordered an item (`reordered`), what number order it is for a user (`order_number`) and how many days since their prior order (`days_since_prior_order`).
 
 How many aisles are there, and which aisles are the most items ordered from?
-```{r}
+
+There are a total for `r instacart %>% count(aisle) %>% nrow()` aisles. The top 3 aisles that the most items are ordered from are output in the table below.
+
+```{r aisles_and_items}
 instacart %>% 
   count(aisle) %>% 
-  arrange(desc(n))
+  arrange(desc(n)) %>% 
+  slice_head(n = 3) %>% 
+  knitr::kable()
 ```
 
-Add a plot for aisles with more than 10000 items ordered. 
+
+Plot for aisles with more than 10000+ items ordered. 
 
 ```{r}
 instacart %>% 
@@ -50,12 +56,16 @@ instacart %>%
     aisle = factor(aisle), 
     aisle = fct_reorder(aisle, n)
     ) %>%
-  ggplot(aes(x = aisle, y = n)) +
+  ggplot(aes(x = aisle, y = n)) + 
+  labs(
+    title = "Aisles with 10,000+ Items Ordered",
+    x = "Aisle",
+    y = "Number of Items Order") + 
   theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
   geom_point()
 ```
 
-This is a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits"
+Below is a table showing the three most popular items in each of the aisles “baking ingredients”, “dog food care”, and “packaged vegetables fruits".
 
 ```{r}
 instacart %>% 
@@ -69,7 +79,7 @@ instacart %>%
 ```
 
 
-This is a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week
+Below is a table showing the mean hour of the day at which Pink Lady Apples and Coffee Ice Cream are ordered on each day of the week
 
 ```{r}
 instacart %>% 
@@ -83,3 +93,28 @@ instacart %>%
   knitr::kable()
 ```
 
+## Problem 2 
+
+```{r, eval=FALSE}
+accel_df = read_csv("./data/accel_data.csv") %>% 
+  janitor::clean_names() %>%
+  pivot_longer() %>% 
+  mutate(weekend = )
+```
+
+table of 35 days, total activity in each day. do week #1 and dow in each to make more readable. use factors to re-order days. check class of minutes
+
+activity count y axis, minute on x axis, geom_line, color for dow,
+
+## Problem 3
+
+```{r}
+library(p8105.datasets)
+data("ny_noaa")
+```
+change tmin/tmax from 10ths of a degree to a degree
+
+part 2 - group by and summarize + ggplot
+
+
+part 3 - 2 different plot and merge them using patchwork
