@@ -115,21 +115,16 @@ Additionally, there is a variable `day` that represents the day of the week the 
 Below is a table of total activity by day for each of the 5 weeks
 
 ```{r activity_by_day}
-accel_day =
-  accel_df %>% 
+accel_df %>% 
   group_by(day, week) %>% 
-  summarize(total_activity = round(sum(activity, na.rm = TRUE)))
-
-# Make table more readable
-accel_day %>% 
-    pivot_wider(
+  summarize(total_activity = round(sum(activity, na.rm = TRUE))) %>% 
+  pivot_wider(
     names_from = day, 
     values_from = total_activity) %>%
   knitr::kable()
 ```
 
-Looking at this table, we notice that this person had very little activity on Saturday during week 4 and week 5 (value of `r min(pull(accel_day,total_activity))`). A general trend that can be noticed is a decrease in activity towards the end of the study, particularly on the weekends.No other clear trends can be noticed from this table. The average total amount of activity on a given day is `r format(mean(pull(accel_day,total_activity)),scientific=FALSE)` and it ranged from `r min(pull(accel_day,total_activity))` to `r format(max(pull(accel_day,total_activity)), scientific=FALSE)`. 
-
+Looking at this table, we notice that this person had very little activity on Saturday during week 4 and week 5. A general trend that can be noticed is a decrease in activity towards the end of the study, particularly on the weekends. No other clear trends can be noticed from this table.
 
 
 The plot below provides information on the 24-hour activity time courses for each day, using color to designate day of the week. 
@@ -159,7 +154,14 @@ This dataset contains information for the `rnoaa` package in R, which contains i
 
 When we first read in the data without any alterations, there are `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns. There is a column `id` which contains each weather station id, `date` which is the date of observation. Other variables include `prcp` , `snow` and `snwd` which contain information on precipitation, snowfall and snow depth, respectively. Lastly, `tmin` and `tmax` provide information on the minimum and maximum temperatures on a given day.
 
-There is a large extent of missingness in this dataset because not every weather station collected information on all of the variables provided. For example, `id` US1NYAB0001 has no information on `tmax` or `tmin`. Missing data  can be an issue here because some stations will be excluded from certain analyses, which could lead to a biased sample of stations
+There is a large extent of missingness in this dataset because not every weather station collected information on all of the variables provided. For example, `id` US1NYAB0001 has no information on `tmax` or `tmin`. Missing data  can be an issue here because some stations will be excluded from certain analyses, which could lead to a biased sample of stations. The percentages of missingness are described below: 
+
+* `r round(sum(is.na(ny_noaa$prcp))/nrow(ny_noaa), 4)*100`% of `prcp` data is missing.
+* `r round(sum(is.na(ny_noaa$snow))/nrow(ny_noaa), 4)*100`% of `snow` data is missing.
+* `r round(sum(is.na(ny_noaa$snwd))/nrow(ny_noaa), digits = 4)*100`% of `snwd` data is missing.
+* `r round(sum(is.na(ny_noaa$tmax))/nrow(ny_noaa), 4)*100`% of `tmax` data is missing.
+* `r round(sum(is.na(ny_noaa$tmin))/nrow(ny_noaa), 4)*100`% of `tmin` data is missing
+
 
 ```{r noaa_data_clean}
 ny_noaa = 
@@ -187,8 +189,7 @@ ny_noaa %>%
 
 The 10 most commonly observed values for snowfall are shown in the table above. 0 is likely the most common because there are many days it does not snow. `NA` is also likely common as certain weather stations may not collect information on snowfall. 
 
-
-## HELP WITH THIS 
+Below is a plot showing the average max temperature in January and in July in each station across years (1981-2010). The left section "01" represents January temperatures and the right section "07" represents July temperatures.
 
 ```{r plot_tmax_year}
 ny_noaa %>% 
@@ -200,6 +201,8 @@ ny_noaa %>%
   geom_point() +
   geom_path() +
   facet_grid(~month) +
+  scale_x_continuous(breaks = c(seq(1980,2010,2))) +
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) +
   labs(title = "Average Maximum Temperature for January and July by Year and Station",
        x = "Year", 
        y = "Average Max Temp (C)") 
@@ -207,6 +210,7 @@ ny_noaa %>%
 ```
 
 
+Looking at this plot, we can see that the average max temperature is much high in July than in January, as expected. In regards to observable structure, we can see that for January, that average maximum temperature appears to have a general trend of rising over the years. This could possibly be attributed to global warming. The average maximum temperature seems stable across the years in July. There are some outliers on both the January and July plots. For one station in the 1982 and one station in 2005 in January, the average maximum temperature was particularly low compared to the rest of the stations. Additionally, in 2004 several stations had higher average temperatures in January compared to the rest of the stations. In July, in 1988 one station have an average maximum temperature far below the rest.
 
 ```{r patchwork_plots}
 tmax_tmin = 
@@ -234,3 +238,7 @@ snow_dist =
 (tmax_tmin + snow_dist) 
 
 ```
+
+The first panel of the plot shows a positive correlation between max and min temperatures on any given day. In context, this means on days when stations reported higher minimum temperatures they reported higher maximum temperatures as well. 
+
+The second panel of the plot shows the snowfall distribution by year. We can see that there were comparable median and IQR values of snow reported across years. We can also see that the years 1998, 2006 and 2010 had some extremely large snowstorms
