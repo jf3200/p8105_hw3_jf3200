@@ -6,20 +6,19 @@ output: github_document
 
 ```{r setup}
 library(tidyverse)
+library(patchwork)
 library(p8105.datasets)
 
 knitr::opts_chunk$set(
   fig.width = 6,
   fig.asp = .6,
-  out.width = "90%"
-)
+  out.width = "90%")
 
 theme_set(theme_minimal() + theme(legend.position = "bottom"))
 
 options(
   ggplot2.continuous.colour = "viridis",
-  ggplot2.continuous.fill = "viridis"
-)
+  ggplot2.continuous.fill = "viridis")
 
 scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
@@ -52,8 +51,7 @@ instacart %>%
   filter(n > 10000) %>% 
   mutate( 
     aisle = factor(aisle), 
-    aisle = fct_reorder(aisle, n)
-    ) %>%
+    aisle = fct_reorder(aisle, n)) %>%
   ggplot(aes(x = aisle, y = n)) + 
   labs(
     title = "Number of Items Ordered in Aisles with 10,000+ Items Ordered",
@@ -100,22 +98,23 @@ accel_df = read_csv("./data/accel_data.csv") %>%
     names_to = "minute", 
     names_prefix = "activity_",
     values_to = "activity") %>% 
-  mutate(weekend = ifelse(day %in% c("Saturday", "Sunday"),1,0), 
+  mutate(weekend = case_when(day %in% c("Monday", "Tuesday", "Wednesday", "Thursday", "Friday") ~ "Weekday",
+                             day %in% c("Saturday", "Sunday") ~ "Weekend"), 
          minute = as.numeric(minute), 
          day = factor(day, levels = c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")))
 ```
 
-This dataset contains 5 weeks (35 days) worth of accelerometer data from a 63 year old man with a BMI of 25 who was admitted to the Advanced Cardiac Care Center of Columbia University Medical Center for congestive heart failure (CHF). The accelerometer measures "activity counts" in one-minute intevals. 
+This dataset contains 5 weeks (35 days) worth of accelerometer data from a 63 year old man with a BMI of 25 who was admitted to the Advanced Cardiac Care Center of Columbia University Medical Center for congestive heart failure (CHF). The accelerometer measures "activity counts" in one-minute intervals. 
 
 After cleaning, tidying and wrangling the data, the results dataset has `r nrow(accel_df)` rows and `r ncol(accel_df)` columns. Each row of the data set represents one minute for each of the days the accelerometer was utilized. The variables in the dataset include `week` taking values from `r accel_df %>% pull(week) %>% min()` to `r accel_df %>% pull(week) %>% max()` for each week of use, as well as `day_id` ranging from `r accel_df %>% pull(day_id) %>% min()` to `r accel_df %>% pull(day_id) %>% max()` for each day of use. There is also a variable `minute` ranging from `r accel_df %>% pull(minute) %>% min()` to 
 `r accel_df %>% pull(minute) %>% max()` for each minute in the day.
 
-Additionally, there is a variable `day` that represents the day of the week the activity was recorded. This variables was converted to a factor in re-ordered to the appropriate days of the week ordering (`r accel_df %>% pull(day) %>% levels()`). A variable `weekend` was created that takes on the value 1 if the `day` is Saturday or Sunday and 0 otherwise. Lastly, the variable `activity` contains a measurement of the activity count for each minute of observation. 
+Additionally, there is a variable `day` that represents the day of the week the activity was recorded. This variables was converted to a factor in re-ordered to the appropriate days of the week ordering (`r accel_df %>% pull(day) %>% levels()`). A variable `weekend` was created to indicate whether a day was the weekend or a weekday. Lastly, the variable `activity` contains a measurement of the activity count for each minute of observation. 
 
 
 Below is a table of total activity by day for each of the 5 weeks
 
-```{r}
+```{r activity_by_day}
 accel_day =
   accel_df %>% 
   group_by(day, week) %>% 
@@ -124,38 +123,114 @@ accel_day =
 # Make table more readable
 accel_day %>% 
     pivot_wider(
-    names_from = week, 
+    names_from = day, 
     values_from = total_activity) %>%
   knitr::kable()
 ```
 
-Looking at this table, we notice that this person had very little activity on Saturday during week 4 and week 5 (value of `r min(pull(accel_day,total_activity))`). A general trend that can be noticed is a decrease in activity towards the end of the study, particularly on the weekends. The average total amount of activity on a given day is `r format(mean(pull(accel_day,total_activity)),scientific=FALSE)` and it ranged from `r min(pull(accel_day,total_activity))` to `r format(max(pull(accel_day,total_activity)), scientific=FALSE)`. 
+Looking at this table, we notice that this person had very little activity on Saturday during week 4 and week 5 (value of `r min(pull(accel_day,total_activity))`). A general trend that can be noticed is a decrease in activity towards the end of the study, particularly on the weekends.No other clear trends can be noticed from this table. The average total amount of activity on a given day is `r format(mean(pull(accel_day,total_activity)),scientific=FALSE)` and it ranged from `r min(pull(accel_day,total_activity))` to `r format(max(pull(accel_day,total_activity)), scientific=FALSE)`. 
 
-ANY TREND I AM MISSING?
 
- 
-Make a single-panel plot that shows the 24-hour activity time courses for each day and use color to indicate day of the week. Describe in words any patterns or conclusions you can make based on this graph. 
-##NEED HELP WITH THIS
 
-```{r}
+The plot below provides information on the 24-hour activity time courses for each day, using color to designate day of the week. 
+
+```{r 24hr_plot}
 accel_df %>% 
-  group_by(day_id) %>%
-  ggplot(aes(x = minute, y = activity, color = day)) + 
-  geom_line()
+  ggplot(aes(x = minute, y = activity, group = day_id, color = day)) +
+  geom_line(alpha = .2) +
+  geom_smooth(aes(group = day)) + 
+  scale_x_continuous(
+    breaks = c(seq(0,1440,120))) + 
+  labs(title = "24 hour Activity Count by Day",
+       x = "Minute", 
+       y = "Activity Count")
 ```
 
-
+Based on this graph, we can see that activity count is very minimal in the beginning minutes of the day (around 12am to 4am), as the person is probably asleep during this time. Activity increases until around minute 720 (12pm) and then plateaus until later in the evening. Around minute 1200 (8pm) there is an increase in activity that begins to decline again until midnight. We can see spikes in activity between minutes 540 to 780 (9am to 1pm) on Sundays and between minutes 1200 to 1320 (8pm to 10pm) on Fridays compared to all other days of the week. 
 
 
 ## Problem 3
 
-```{r}
-library(p8105.datasets)
+```{r load_ny_noaa}
 data("ny_noaa")
 ```
-change tmin/tmax from 10ths of a degree to a degree
 
-part 2 - group by and summarize + ggplot
+This dataset contains information for the `rnoaa` package in R, which contains information for the National Oceanic and Atmospheric Association (NOAA). This dataset is a subset of the NOAA data containing information on  New York state weather stations from `r min(pull(ny_noaa, date))` through `r max(pull(ny_noaa, date))`
+
+When we first read in the data without any alterations, there are `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns. There is a column `id` which contains each weather station id, `date` which is the date of observation. Other variables include `prcp` , `snow` and `snwd` which contain information on precipitation, snowfall and snow depth, respectively. Lastly, `tmin` and `tmax` provide information on the minimum and maximum temperatures on a given day.
+
+There is a large extent of missingness in this dataset because not every weather station collected information on all of the variables provided. For example, `id` US1NYAB0001 has no information on `tmax` or `tmin`. Missing data  can be an issue here because some stations will be excluded from certain analyses, which could lead to a biased sample of stations
+
+```{r noaa_data_clean}
+ny_noaa = 
+  ny_noaa %>%
+  separate(date, 
+           into = c("year", "month", "day"),
+           sep = "-") %>%
+  mutate(
+    prcp = prcp / 10,
+    tmin = as.numeric(tmin), 
+    tmax = as.numeric(tmax),
+    tmin = tmin / 10,
+    tmax = tmax / 10)
+  
+```
 
 
-part 3 - 2 different plot and merge them using patchwork
+After some data cleaning, we have changed `date` into 3 columns: `year`, `month` and `day` using `separate()`. Additionally, the `prcp` was changed from tenths of mm to mm and `tmin` and `tmax` were changed from tenths of degrees celsius to degrees celsius. 
+
+```{r snow_count}
+ny_noaa %>% 
+  count(snow) %>% 
+  arrange(desc(n))
+```
+
+The 10 most commonly observed values for snowfall are shown in the table above. 0 is likely the most common because there are many days it does not snow. `NA` is also likely common as certain weather stations may not collect information on snowfall. 
+
+
+## HELP WITH THIS 
+
+```{r plot_tmax_year}
+ny_noaa %>% 
+  filter(month %in% c("01","07")) %>% 
+  group_by(year, month, id) %>% 
+  summarize(avg_max_temp = mean(tmax, na.rm = TRUE)) %>% 
+  mutate(year =  as.numeric(year)) %>%
+  ggplot(aes(x = year, y = avg_max_temp, group = id)) +
+  geom_point() +
+  geom_path() +
+  facet_grid(~month) +
+  labs(title = "Average Maximum Temperature for January and July by Year and Station",
+       x = "Year", 
+       y = "Average Max Temp (C)") 
+
+```
+
+
+
+```{r patchwork_plots}
+tmax_tmin = 
+  ny_noaa %>% 
+  ggplot(aes(x = tmin, y = tmax)) + 
+  geom_hex() + 
+  labs(title = "Max temp vs. Min temp by Day",
+       x = "Minimum Temperature (C)", 
+       y = "Maximum Temperature (C)") + 
+  theme(legend.position = "left")
+
+snow_dist = 
+  ny_noaa %>% 
+  filter(snow > 0, snow < 100) %>% 
+  ggplot(aes(x = year, y = snow, color =  year)) + 
+  geom_boxplot() + 
+  theme(axis.text.x = element_text(angle = 90, vjust = 0.5, hjust = 1)) + 
+  labs(title = "Snowfall Distribution by Year",
+       x = "Year", 
+       y = "Snowfall (mm)") +
+  theme(legend.position = "none") + 
+  coord_flip()
+
+
+(tmax_tmin + snow_dist) 
+
+```
