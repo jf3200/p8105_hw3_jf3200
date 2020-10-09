@@ -109,7 +109,7 @@ This dataset contains 5 weeks (35 days) worth of accelerometer data from a 63 ye
 After cleaning, tidying and wrangling the data, the results dataset has `r nrow(accel_df)` rows and `r ncol(accel_df)` columns. Each row of the data set represents one minute for each of the days the accelerometer was utilized. The variables in the dataset include `week` taking values from `r accel_df %>% pull(week) %>% min()` to `r accel_df %>% pull(week) %>% max()` for each week of use, as well as `day_id` ranging from `r accel_df %>% pull(day_id) %>% min()` to `r accel_df %>% pull(day_id) %>% max()` for each day of use. There is also a variable `minute` ranging from `r accel_df %>% pull(minute) %>% min()` to 
 `r accel_df %>% pull(minute) %>% max()` for each minute in the day.
 
-Additionally, there is a variable `day` that represents the day of the week the activity was recorded. This variables was converted to a factor in re-ordered to the appropriate days of the week ordering (`r accel_df %>% pull(day) %>% levels()`). A variable `weekend` was created to indicate whether a day was the weekend or a weekday. Lastly, the variable `activity` contains a measurement of the activity count for each minute of observation. 
+Additionally, there is a variable `day` that represents the day of the week the activity was recorded. This variable was converted to a factor and re-ordered to the appropriate days of the week ordering (`r accel_df %>% pull(day) %>% levels()`). A variable `weekend` was created to indicate whether a day was the weekend or a weekday. Lastly, the variable `activity` contains a measurement of the activity count for each minute of observation. 
 
 
 Below is a table of total activity by day for each of the 5 weeks
@@ -150,9 +150,9 @@ Based on this graph, we can see that activity count is very minimal in the begin
 data("ny_noaa")
 ```
 
-This dataset contains information for the `rnoaa` package in R, which contains information for the National Oceanic and Atmospheric Association (NOAA). This dataset is a subset of the NOAA data containing information on  New York state weather stations from `r min(pull(ny_noaa, date))` through `r max(pull(ny_noaa, date))`
+This dataset contains information from the `rnoaa` package in R, which contains information from the National Oceanic and Atmospheric Association (NOAA). This dataset is a subset of the NOAA data containing information on  New York state weather stations from `r min(pull(ny_noaa, date))` through `r max(pull(ny_noaa, date))`
 
-When we first read in the data without any alterations, there are `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns. There is a column `id` which contains each weather station id, `date` which is the date of observation. Other variables include `prcp` , `snow` and `snwd` which contain information on precipitation, snowfall and snow depth, respectively. Lastly, `tmin` and `tmax` provide information on the minimum and maximum temperatures on a given day.
+When we first read in the data without any alterations, there are `r nrow(ny_noaa)` rows and `r ncol(ny_noaa)` columns. There is a column `id` which contains each weather station id, `date` which is the date of observation. Other variables include `prcp` , `snow` and `snwd` which contain information on precipitation, snowfall and snow depth, respectively. Lastly, `tmin` and `tmax` provide information on the minimum and maximum temperatures on a given day from each station.
 
 There is a large extent of missingness in this dataset because not every weather station collected information on all of the variables provided. For example, `id` US1NYAB0001 has no information on `tmax` or `tmin`. Missing data  can be an issue here because some stations will be excluded from certain analyses, which could lead to a biased sample of stations. The percentages of missingness are described below: 
 
@@ -239,6 +239,6 @@ snow_dist =
 
 ```
 
-The first panel of the plot shows a positive correlation between max and min temperatures on any given day. In context, this means on days when stations reported higher minimum temperatures they reported higher maximum temperatures as well. 
+The first panel of the plot shows a positive correlation between max and min temperatures on any given day. In context, this means on days when stations reported higher minimum temperatures they reported higher maximum temperatures as well. This is reasonable as hotter days are likely to have higher minimum temperatures than cooler days. 
 
 The second panel of the plot shows the snowfall distribution by year. We can see that there were comparable median and IQR values of snow reported across years. We can also see that the years 1998, 2006 and 2010 had some extremely large snowstorms
